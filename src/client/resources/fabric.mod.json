@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "vibrant_f3",
+  "version": "1.0.0",
+  "name": "Vibrant F3",
+  "description": "Adds a color picker to F3 Options Screen (f3 + f6)",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/vibrant_f3/icon.png",
+  "accessWidener" : "vibrant_f3.classtweaker",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "io.github.amitalimollaei.mods.vibrantf3.VibrantF3Client"
+    ]
+  },
+  "mixins": [
+    "vibrant_f3.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "fabric-api": "*",
+    "minecraft": "1.21.11"
+  }
+}
