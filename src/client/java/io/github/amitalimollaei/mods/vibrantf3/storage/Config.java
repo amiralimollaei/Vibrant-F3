@@ -36,7 +36,7 @@ public class Config extends MidnightConfig {
                 "minecraft:post_effect#fff9ff80",
                 "minecraft:tps#ff80ff8f",
                 "minecraft:system_specs#ff80dfff",
-                "minecraft:gpu_utilization#ffff8080",
+                "minecraft:gpu_utilization#ffffc280",
                 "minecraft:simple_performance_impactors#ff80dfff",
                 "minecraft:memory#ffffc280",
                 "minecraft:sound_mood#fff9ff80",
