@@ -33,7 +33,7 @@ public class Config extends MidnightConfig {
                 "minecraft:looking_at_entity#fff9ff80",
                 "minecraft:looking_at_fluid#fff9ff80",
                 "minecraft:player_position#ff80ff8f",
-                "minecraft:particle_render_stats#fff9ff80",
+                "minecraft:particle_render_stats#ff80dfff",
                 "minecraft:player_section_position#ff80ff8f",
                 "minecraft:post_effect#fff9ff80",
                 "minecraft:tps#ff80ff8f",
