@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public abstract class VibrantDebugScreenDisplayer implements DebugScreenDisplayer {
-    Color color;
-    Identifier debugIdentifier = null;
+    private Color color;
+    private Identifier debugIdentifier = null;
 
     private @NotNull String maybeAddDebugPrefix(@NotNull String string) {
         return (debugIdentifier == null ? "" : "[" + debugIdentifier + "] ") + string;
