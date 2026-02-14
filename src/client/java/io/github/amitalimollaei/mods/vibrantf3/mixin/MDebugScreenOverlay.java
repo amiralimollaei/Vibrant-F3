@@ -1,6 +1,8 @@
 package io.github.amitalimollaei.mods.vibrantf3.mixin;
 
 import com.google.common.base.Strings;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.amitalimollaei.mods.vibrantf3.storage.Config;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -12,23 +14,19 @@ import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntries;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
 import net.minecraft.client.gui.components.debugchart.*;
-import net.minecraft.client.gui.screens.LevelLoadingScreen;
-import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.level.ChunkLevel;
-import net.minecraft.server.level.progress.ChunkLoadStatusView;
 import net.minecraft.util.debugchart.LocalSampleLogger;
-import net.minecraft.util.profiling.Profiler;
-import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.util.profiling.Zone;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.awt.*;
 import java.util.*;
@@ -100,83 +98,43 @@ public abstract class MDebugScreenOverlay {
     @Final
     private Font font;
 
-    /**
-     * @author amiralimollaei
-     * @reason we need to change all instances of lines being stored as String to lines being stored as Component
-     */
-    @Overwrite
-    public void render(GuiGraphics guiGraphics) {
-        Options options = minecraft.options;
-        if (minecraft.isGameLoadFinished() && (!options.hideGui || minecraft.screen != null)) {
-            Collection<Identifier> collection = minecraft.debugEntries.getCurrentlyEnabled();
-            if (!collection.isEmpty()) {
-                guiGraphics.nextStratum();
-                ProfilerFiller profilerFiller = Profiler.get();
-                profilerFiller.push("debug");
-                ChunkPos chunkPos;
-                if (minecraft.getCameraEntity() != null && minecraft.level != null) {
-                    BlockPos blockPos = minecraft.getCameraEntity().blockPosition();
-                    chunkPos = new ChunkPos(blockPos);
-                } else {
-                    chunkPos = null;
-                }
+    @WrapOperation(
+            method = "render",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntry;display(Lnet/minecraft/client/gui/components/debug/DebugScreenDisplayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/chunk/LevelChunk;)V"
+            )
+    )
+    public void vibrant_f3$skipVanillaDebugEntryDisplay(DebugScreenEntry instance, DebugScreenDisplayer debugScreenDisplayer, Level level, LevelChunk levelChunk1, LevelChunk levelChunk2, Operation<Void> original) {
+        // do nothing, we inject our own code instead
+    }
 
-                if (!Objects.equals(lastPos, chunkPos)) {
-                    lastPos = chunkPos;
-                    clearChunkCache();
-                }
+    @WrapOperation(
+            method = "render",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V"
+            )
+    )
+    public void vibrant_f3$skipVanillaRenderLines(DebugScreenOverlay instance, GuiGraphics guiGraphics, List<String> list, boolean bl, Operation<Void> original) {
+        // do nothing, we inject our own code instead
+    }
 
-
-                // this runs the only part of the function's code that we actually change
-                // TODO: only redirect to this function, don't overwrite `render`
-                renderDebugEntries(guiGraphics, collection);
-
-                guiGraphics.nextStratum();
-                profilerPieChart.setBottomOffset(10);
-                if (showFpsCharts()) {
-                    int j = guiGraphics.guiWidth();
-                    int k = j / 2;
-                    fpsChart.drawChart(guiGraphics, 0, fpsChart.getWidth(k));
-                    if (tickTimeLogger.size() > 0) {
-                        int l = tpsChart.getWidth(k);
-                        tpsChart.drawChart(guiGraphics, j - l, l);
-                    }
-
-                    profilerPieChart.setBottomOffset(tpsChart.getFullHeight());
-                }
-
-                if (showNetworkCharts() && minecraft.getConnection() != null) {
-                    int j = guiGraphics.guiWidth();
-                    int k = j / 2;
-                    if (!minecraft.isLocalServer()) {
-                        bandwidthChart.drawChart(guiGraphics, 0, bandwidthChart.getWidth(k));
-                    }
-
-                    int l = pingChart.getWidth(k);
-                    pingChart.drawChart(guiGraphics, j - l, l);
-                    profilerPieChart.setBottomOffset(pingChart.getFullHeight());
-                }
-
-                if (minecraft.debugEntries.isCurrentlyEnabled(DebugScreenEntries.VISUALIZE_CHUNKS_ON_SERVER)) {
-                    IntegratedServer integratedServer = minecraft.getSingleplayerServer();
-                    if (integratedServer != null && minecraft.player != null) {
-                        ChunkLoadStatusView chunkLoadStatusView = integratedServer.createChunkLoadStatusView(16 + ChunkLevel.RADIUS_AROUND_FULL_CHUNK);
-                        chunkLoadStatusView.moveTo(minecraft.player.level().dimension(), minecraft.player.chunkPosition());
-                        LevelLoadingScreen.renderChunks(guiGraphics, guiGraphics.guiWidth() / 2, guiGraphics.guiHeight() / 2, 4, 1, chunkLoadStatusView);
-                    }
-                }
-
-                try (Zone zone = profilerFiller.zone("profilerPie")) {
-                    profilerPieChart.render(guiGraphics);
-                }
-
-                profilerFiller.pop();
-            }
-        }
+    @Inject(
+            method = "render",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V",
+                    ordinal = 1  // index of the last renderLines call
+            )
+    )
+    public void vibrant_f3$doVibrantDebugEntryDisplay(GuiGraphics graphics, CallbackInfo ci) {
+        Collection<Identifier> collection = minecraft.debugEntries.getCurrentlyEnabled();
+        renderDebugEntries(graphics, collection);
     }
 
     @Unique
-    private void renderDebugEntries(GuiGraphics guiGraphics, Collection<Identifier> collection) {
+    private void renderDebugEntries(GuiGraphics graphics, Collection<Identifier> debugEntries) {
         Options options = minecraft.options;
 
         final List<Component> leftLines = new ArrayList<>();
@@ -185,7 +143,7 @@ public abstract class MDebugScreenOverlay {
         final List<Component> lines = new ArrayList<>();
         Level level = getLevel();
 
-        for(Identifier entryIdentifier : collection) {
+        for(Identifier entryIdentifier : debugEntries) {
             DebugScreenEntry debugScreenEntry = DebugScreenEntries.getEntry(entryIdentifier);
             if (debugScreenEntry != null) {
                 Color color = Config.getEntryColor(entryIdentifier);
@@ -291,8 +249,8 @@ public abstract class MDebugScreenOverlay {
             leftLines.add(Component.literal("To edit: press " + string6));
         }
 
-        renderLines(guiGraphics, leftLines, true);
-        renderLines(guiGraphics, rightLines, false);
+        renderLines(graphics, leftLines, true);
+        renderLines(graphics, rightLines, false);
     }
 
     @Unique
