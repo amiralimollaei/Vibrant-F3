@@ -21,7 +21,7 @@ public class VibrantF3Client implements ClientModInitializer {
     public void onInitializeClient() {
         MidnightConfig.init(MOD_ID, Config.class);
         debugKeyBinding = new KeyMapping(
-                "vibrant_f3.key.debug",
+                MOD_ID + ".key.debug",
                 InputConstants.Type.KEYSYM,
                 -1,
                 CATEGORY
