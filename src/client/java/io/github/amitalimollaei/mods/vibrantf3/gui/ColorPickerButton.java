@@ -28,9 +28,9 @@ public class ColorPickerButton extends AbstractButton {
 
     private int getShadowColor() {
         return new Color(
-                (int) Math.max(color.getRed() * 0.5F, 0),
-                (int) Math.max(color.getGreen() * 0.5F, 0),
-                (int) Math.max(color.getBlue() * 0.5F, 0),
+                (int) Math.max(color.getRed() * 0.25F, 0),
+                (int) Math.max(color.getGreen() * 0.25F, 0),
+                (int) Math.max(color.getBlue() * 0.25F, 0),
                 255
         ).getRGB();
     }

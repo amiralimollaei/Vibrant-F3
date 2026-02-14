@@ -11,9 +11,8 @@ import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.chunk.LevelChunk;
 import org.jspecify.annotations.NonNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,9 +20,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 @Mixin(DebugScreenOverlay.class)
 public abstract class MDebugScreenOverlay {
@@ -61,15 +63,15 @@ public abstract class MDebugScreenOverlay {
         }
     };
 
-    @WrapOperation(
+    @ModifyArg(
             method = "render",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntry;display(Lnet/minecraft/client/gui/components/debug/DebugScreenDisplayer;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/level/chunk/LevelChunk;Lnet/minecraft/world/level/chunk/LevelChunk;)V"
             )
     )
-    public void vibrant_f3$skipVanillaDebugEntryDisplay(DebugScreenEntry instance, DebugScreenDisplayer debugScreenDisplayer, Level level, LevelChunk levelChunk1, LevelChunk levelChunk2, Operation<Void> original) {
-        original.call(instance, vibrantDebugScreenDisplayer, level, levelChunk1, levelChunk2);
+    public DebugScreenDisplayer vibrant_f3$replaceDebugScreenDisplayer(DebugScreenDisplayer original) {
+        return vibrantDebugScreenDisplayer;
     }
 
     @WrapOperation(
@@ -171,27 +173,23 @@ public abstract class MDebugScreenOverlay {
         Objects.requireNonNull(font);
         int i = 9;
 
-        // draws the background of lines
         for(int j = 0; j < lines.size(); ++j) {
             Component text = lines.get(j);
             if (!Strings.isNullOrEmpty(text.getString())) {
                 int k = font.width(text.getString());
                 int l = left ? 2 : graphics.guiWidth() - 2 - k;
                 int m = 2 + i * j;
-                graphics.fill(l - 1, m - 1, l + k + 1, m + i - 1, 0x90505050);
+                TextColor textColor = text.getStyle().getColor();
+                Color color = new Color(textColor == null ? 0xFFE0E0E0 : textColor.getValue());
+                Color backgroundColor = new Color(
+                        (int) Math.max(color.getRed() * 0.25F, 0),
+                        (int) Math.max(color.getGreen() * 0.25F, 0),
+                        (int) Math.max(color.getBlue() * 0.25F, 0),
+                        0x90
+                );
+                graphics.fill(l - 1, m - 1, l + k + 1, m + i - 1, backgroundColor.getRGB());
+                graphics.drawString(font, text, l, m, 0xFFE0E0E0, false);
             }
         }
-
-        // draws the actual text of lines
-        for(int j = 0; j < lines.size(); ++j) {
-            Component text = lines.get(j);
-            if (!Strings.isNullOrEmpty(text.getString())) {
-                int k = font.width(text.getString());
-                int l = left ? 2 : graphics.guiWidth() - 2 - k;
-                int m = 2 + i * j;
-                graphics.drawString(font, text, l, m, -2039584, false);
-            }
-        }
-
     }
 }

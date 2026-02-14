@@ -27,7 +27,7 @@ public class Config extends MidnightConfig {
 
     public static Color getEntryColor(Identifier identifier) {
         String identifierString = identifier.toString();
-        AtomicReference<Color> color = new AtomicReference<>(Color.WHITE);
+        AtomicReference<Color> color = new AtomicReference<>(new Color(0xFFE0E0E0));
         identifierColor.stream().filter(v -> v.startsWith(identifierString)).findFirst().ifPresent(
                 v -> {
                     String hexColor = v.substring(identifierString.length()+1);
