@@ -32,36 +32,15 @@ public abstract class MDebugScreenOverlay {
     @Shadow @Final private Font font;
 
     @Unique
-    private List<Component> leftLines = new ArrayList<>();
+    private List<Component> leftLines;
     @Unique
-    private List<Component> rightLines = new ArrayList<>();
+    private List<Component> rightLines;
     @Unique
-    private Map<Identifier, Collection<Component>> groupedLines = new LinkedHashMap<>();
+    private Map<Identifier, Collection<Component>> groupedLines;
     @Unique
-    private List<Component> lines = new ArrayList<>();
+    private List<Component> lines;
     @Unique
-    private final VibrantDebugScreenDisplayer vibrantDebugScreenDisplayer = new VibrantDebugScreenDisplayer() {
-        public void vaddPriorityLine(Component text) {
-            if (leftLines.size() > rightLines.size()) {
-                rightLines.add(text);
-            } else {
-                leftLines.add(text);
-            }
-
-        }
-
-        public void vaddLine(Component text) {
-            lines.add(text);
-        }
-
-        public void vaddToGroup(Identifier identifier, Collection<Component> collection) {
-            groupedLines.computeIfAbsent(identifier, x -> new ArrayList<>()).addAll(collection);
-        }
-
-        public void vaddToGroup(Identifier identifier, Component text) {
-            groupedLines.computeIfAbsent(identifier, x -> new ArrayList<>()).add(text);
-        }
-    };
+    private VibrantDebugScreenDisplayer vibrantDebugScreenDisplayer;
 
     @ModifyArg(
             method = "render",
@@ -83,6 +62,9 @@ public abstract class MDebugScreenOverlay {
     )
     public DebugScreenEntry vibrant_f3$setEntryColor(Identifier entryIdentifier, Operation<DebugScreenEntry> original) {
         vibrantDebugScreenDisplayer.setColor(Config.getEntryColor(entryIdentifier));
+        if (Config.debugEnabled) {
+            vibrantDebugScreenDisplayer.setDebugIdentifier(entryIdentifier);
+        }
         return original.call(entryIdentifier);
     }
 
@@ -114,11 +96,33 @@ public abstract class MDebugScreenOverlay {
                     target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;getLevel()Lnet/minecraft/world/level/Level;"
             )
     )
-    public void vibrant_f3$doVibrantDebugEntryDisplay(GuiGraphics graphics, CallbackInfo ci) {
+    public void vibrant_f3$resetRenderStates(GuiGraphics graphics, CallbackInfo ci) {
         leftLines = new ArrayList<>();
         rightLines = new ArrayList<>();
         groupedLines = new LinkedHashMap<>();
         lines = new ArrayList<>();
+        vibrantDebugScreenDisplayer = new VibrantDebugScreenDisplayer() {
+            public void vaddPriorityLine(Component text) {
+                if (leftLines.size() > rightLines.size()) {
+                    rightLines.add(text);
+                } else {
+                    leftLines.add(text);
+                }
+
+            }
+
+            public void vaddLine(Component text) {
+                lines.add(text);
+            }
+
+            public void vaddToGroup(Identifier identifier, Collection<Component> collection) {
+                groupedLines.computeIfAbsent(identifier, x -> new ArrayList<>()).addAll(collection);
+            }
+
+            public void vaddToGroup(Identifier identifier, Component text) {
+                groupedLines.computeIfAbsent(identifier, x -> new ArrayList<>()).add(text);
+            }
+        };
     }
 
     @Inject(

@@ -12,6 +12,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Config extends MidnightConfig {
     @Entry(idMode = 1)
     public static List<String> identifierColor = Lists.newArrayList();
+    @Entry
+    public static boolean debugEnabled = false;
 
     public static List<String> getDefaultColors() {
         return List.of(
