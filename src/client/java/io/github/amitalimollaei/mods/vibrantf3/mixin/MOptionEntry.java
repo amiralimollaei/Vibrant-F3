@@ -52,7 +52,9 @@ public abstract class MOptionEntry extends DebugOptionsScreen.AbstractOptionEntr
                 0, 0, COLOR_PICKER_BUTTON_SIZE, Config.getEntryColor(identifier),
                 input -> new Thread(() -> {
                     if (Minecraft.getInstance().hasShiftDown()) {
-                        setColor(identifier, new Color(0xFFE0E0E0));
+                        Config.removeEntry(identifier);
+                        colorPickerButton.setColor(Config.getEntryColor(identifier));
+                        VibrantF3Client.saveConfig();
                     } else {
                         Color initalColor = Config.getEntryColor(identifier);
                         Color newColor = JColorChooser.showDialog(null, Component.translatable("vibrantf3.gui.color_picker").getString(), initalColor);
