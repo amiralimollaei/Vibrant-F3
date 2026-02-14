@@ -17,6 +17,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.swing.*;
@@ -70,15 +72,15 @@ public abstract class MOptionEntry extends DebugOptionsScreen.AbstractOptionEntr
         children.add(colorPickerButton);
     }
 
-    @WrapOperation(
+    @ModifyArg(
             method = "renderContent(Lnet/minecraft/client/gui/GuiGraphics;IIZF)V",
             at = @At(
                     value = "INVOKE", target = "Lnet/minecraft/client/gui/components/CycleButton;setX(I)V",
                     ordinal = 0
             )
     )
-    public void vibrant_f3$renderColorPickerButton1(CycleButton<Boolean> instance, int i, Operation<Void> original) {
-        original.call(instance, i - COLOR_PICKER_BUTTON_SIZE);
+    public int vibrant_f3$renderColorPickerButton1(int x) {
+        return x - COLOR_PICKER_BUTTON_SIZE;
     }
 
     @Inject(
