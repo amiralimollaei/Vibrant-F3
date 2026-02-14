@@ -56,14 +56,14 @@ public abstract class MOptionEntry extends DebugOptionsScreen.AbstractOptionEntr
                         VibrantF3Client.saveConfig();
                     } else {
                         Color initalColor = Config.getEntryColor(identifier);
-                        Color newColor = JColorChooser.showDialog(null, Component.translatable("vibrantf3.gui.color_picker").getString(), initalColor);
+                        Color newColor = JColorChooser.showDialog(null, Component.translatable("vibrant_f3.gui.color_picker").getString(), initalColor);
                         if (newColor != null) {
                             setColor(identifier, newColor);
                         }
                     }
                 }).start()
         );
-        colorPicker.setTooltip(Tooltip.create(Component.translatable("vibrantf3.gui.color_picker")));
+        colorPicker.setTooltip(Tooltip.create(Component.translatable("vibrant_f3.gui.color_picker.tooltip")));
 
         colorPickerButton = colorPicker;
         children.add(colorPickerButton);

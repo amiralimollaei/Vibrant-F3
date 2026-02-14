@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Config extends MidnightConfig {
     @Entry(idMode = 1)
-    public static List<String> identifierColor = Lists.newArrayList();
+    public static List<String> debugHudEntryColors = Lists.newArrayList();
     @Entry
     public static boolean debugEnabled = false;
 
@@ -63,24 +63,24 @@ public class Config extends MidnightConfig {
     public static void addEntryColor(Identifier identifier, Color color) {
         List<String> newIdentifierColor = Lists.newArrayList();
         String identifierString = identifier.toString();
-        for (String entry: identifierColor) {
+        for (String entry: debugHudEntryColors) {
             if (!entry.startsWith(identifierString)) {
                 newIdentifierColor.add(entry);
             }
         }
         newIdentifierColor.add(identifier + "#" + Integer.toHexString(color.getRGB()));
-        identifierColor = newIdentifierColor;
+        debugHudEntryColors = newIdentifierColor;
     }
 
     public static void removeEntry(Identifier identifier) {
         List<String> newIdentifierColor = Lists.newArrayList();
         String identifierString = identifier.toString();
-        for (String entry: identifierColor) {
+        for (String entry: debugHudEntryColors) {
             if (!entry.startsWith(identifierString)) {
                 newIdentifierColor.add(entry);
             }
         }
-        identifierColor = newIdentifierColor;
+        debugHudEntryColors = newIdentifierColor;
     }
 
     public static Color getDefaultEntryColor(Identifier identifier) {
@@ -99,7 +99,7 @@ public class Config extends MidnightConfig {
     public static Color getEntryColor(Identifier identifier) {
         String identifierString = identifier.toString();
         AtomicReference<Color> color = new AtomicReference<>(null);
-        identifierColor.stream().filter(v -> v.startsWith(identifierString)).findFirst().ifPresent(
+        debugHudEntryColors.stream().filter(v -> v.startsWith(identifierString)).findFirst().ifPresent(
                 v -> {
                     String hexColor = v.substring(identifierString.length()+1);
                     int colorInt = Integer.parseInt(hexColor.substring(2), 16);
@@ -115,6 +115,6 @@ public class Config extends MidnightConfig {
 
     public static boolean isEntryPresent(Identifier identifier) {
         String identifierString = identifier.toString();
-        return identifierColor.stream().anyMatch(v -> v.startsWith(identifierString));
+        return debugHudEntryColors.stream().anyMatch(v -> v.startsWith(identifierString));
     }
 }

@@ -1,4 +1,6 @@
 {
-  "vibrantf3.gui.color_picker": "Pick Color",
-  "vibrantf3.gui.color_picker.tooltip": "Open Color Picker"
+  "vibrant_f3.gui.color_picker": "Pick Color",
+  "vibrant_f3.gui.color_picker.tooltip": "Open Color Picker",
+  "vibrant_f3.midnightconfig.debugHudEntryColors": "F3 Menu Entry Colors",
+  "vibrant_f3.midnightconfig.debugEnabled": "Show Entry Names In F3 Menu"
 }
