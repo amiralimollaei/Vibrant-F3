@@ -23,7 +23,7 @@ public class VibrantF3Client implements ClientModInitializer {
         debugKeyBinding = new KeyMapping(
                 "vibrant_f3.key.debug",
                 InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_F7,
+                -1,
                 CATEGORY
         );
         KeyBindingHelper.registerKeyBinding(debugKeyBinding);
