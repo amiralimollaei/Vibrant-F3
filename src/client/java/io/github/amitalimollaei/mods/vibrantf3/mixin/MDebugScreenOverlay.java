@@ -5,38 +5,61 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.amitalimollaei.mods.vibrantf3.debug.VibrantDebugScreenDisplayer;
 import io.github.amitalimollaei.mods.vibrantf3.storage.Config;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
-import net.minecraft.client.gui.components.debug.DebugScreenEntries;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.*;
-import java.util.List;
 
 @Mixin(DebugScreenOverlay.class)
 public abstract class MDebugScreenOverlay {
-    @Shadow @Final private Minecraft minecraft;
-    @Shadow @Nullable protected abstract Level getLevel();
-    @Shadow @Nullable protected abstract  LevelChunk getClientChunk();
-    @Shadow @Nullable protected abstract LevelChunk getServerChunk();
     @Shadow @Final private Font font;
 
     @Unique
     private List<Component> leftLines = new ArrayList<>();
     @Unique
     private List<Component> rightLines = new ArrayList<>();
+    @Unique
+    private Map<Identifier, Collection<Component>> groupedLines = new LinkedHashMap<>();
+    @Unique
+    private List<Component> lines = new ArrayList<>();
+    @Unique
+    private final VibrantDebugScreenDisplayer vibrantDebugScreenDisplayer = new VibrantDebugScreenDisplayer() {
+        public void vaddPriorityLine(Component text) {
+            if (leftLines.size() > rightLines.size()) {
+                rightLines.add(text);
+            } else {
+                leftLines.add(text);
+            }
+
+        }
+
+        public void vaddLine(Component text) {
+            lines.add(text);
+        }
+
+        public void vaddToGroup(Identifier identifier, Collection<Component> collection) {
+            groupedLines.computeIfAbsent(identifier, x -> new ArrayList<>()).addAll(collection);
+        }
+
+        public void vaddToGroup(Identifier identifier, Component text) {
+            groupedLines.computeIfAbsent(identifier, x -> new ArrayList<>()).add(text);
+        }
+    };
 
     @WrapOperation(
             method = "render",
@@ -46,7 +69,19 @@ public abstract class MDebugScreenOverlay {
             )
     )
     public void vibrant_f3$skipVanillaDebugEntryDisplay(DebugScreenEntry instance, DebugScreenDisplayer debugScreenDisplayer, Level level, LevelChunk levelChunk1, LevelChunk levelChunk2, Operation<Void> original) {
-        // do nothing, we inject our own code instead
+        original.call(instance, vibrantDebugScreenDisplayer, level, levelChunk1, levelChunk2);
+    }
+
+    @WrapOperation(
+            method = "render",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/components/debug/DebugScreenEntries;getEntry(Lnet/minecraft/resources/Identifier;)Lnet/minecraft/client/gui/components/debug/DebugScreenEntry;"
+            )
+    )
+    public DebugScreenEntry vibrant_f3$setEntryColor(Identifier entryIdentifier, Operation<DebugScreenEntry> original) {
+        vibrantDebugScreenDisplayer.setColor(Config.getEntryColor(entryIdentifier));
+        return original.call(entryIdentifier);
     }
 
     @WrapOperation(
@@ -74,54 +109,26 @@ public abstract class MDebugScreenOverlay {
             method = "render",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V",
-                    ordinal = 1  // index of the last renderLines call
+                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;getLevel()Lnet/minecraft/world/level/Level;"
             )
     )
     public void vibrant_f3$doVibrantDebugEntryDisplay(GuiGraphics graphics, CallbackInfo ci) {
-        Collection<Identifier> collection = minecraft.debugEntries.getCurrentlyEnabled();
-        vibrant_f3$renderDebugEntries(collection);
-    }
-
-    @Unique
-    private void vibrant_f3$renderDebugEntries(@NonNull Collection<Identifier> debugEntries) {
         leftLines = new ArrayList<>();
         rightLines = new ArrayList<>();
-        final Map<Identifier, Collection<Component>> map = new LinkedHashMap<>();
-        final List<Component> lines = new ArrayList<>();
-        Level level = getLevel();
+        groupedLines = new LinkedHashMap<>();
+        lines = new ArrayList<>();
+    }
 
-        VibrantDebugScreenDisplayer vibrantDebugScreenDisplayer = new VibrantDebugScreenDisplayer() {
-            public void vaddPriorityLine(Component text) {
-                if (leftLines.size() > rightLines.size()) {
-                    rightLines.add(text);
-                } else {
-                    leftLines.add(text);
-                }
-
-            }
-
-            public void vaddLine(Component text) {
-                lines.add(text);
-            }
-
-            public void vaddToGroup(Identifier identifier, Collection<Component> collection) {
-                map.computeIfAbsent(identifier, x -> new ArrayList<>()).addAll(collection);
-            }
-
-            public void vaddToGroup(Identifier identifier, Component text) {
-                map.computeIfAbsent(identifier, x -> new ArrayList<>()).add(text);
-            }
-        };
-
-        for(Identifier entryIdentifier : debugEntries) {
-            DebugScreenEntry debugScreenEntry = DebugScreenEntries.getEntry(entryIdentifier);
-            if (debugScreenEntry != null) {
-                vibrantDebugScreenDisplayer.setColor(Config.getEntryColor(entryIdentifier));
-                debugScreenEntry.display(vibrantDebugScreenDisplayer, level, getClientChunk(), getServerChunk());
-            }
-        }
-
+    @Inject(
+            method = "render",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;renderLines(Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;Z)V",
+                    ordinal = 0,
+                    shift = At.Shift.BEFORE
+            )
+    )
+    private void vibrant_f3$spreadLines(GuiGraphics graphics, CallbackInfo ci) {
         if (!leftLines.isEmpty()) {
             leftLines.add(Component.literal(""));
         }
@@ -140,7 +147,7 @@ public abstract class MDebugScreenOverlay {
             }
         }
 
-        List<Collection<Component>> list4 = new ArrayList<>(map.values());
+        List<Collection<Component>> list4 = new ArrayList<>(groupedLines.values());
         if (!list4.isEmpty()) {
             int j = (list4.size() + 1) / 2;
 
