@@ -1,7 +1,5 @@
 package io.github.amitalimollaei.mods.vibrantf3.mixin;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.amitalimollaei.mods.vibrantf3.VibrantF3Client;
 import io.github.amitalimollaei.mods.vibrantf3.gui.ColorPickerButton;
 import io.github.amitalimollaei.mods.vibrantf3.storage.Config;
@@ -18,7 +16,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.swing.*;
