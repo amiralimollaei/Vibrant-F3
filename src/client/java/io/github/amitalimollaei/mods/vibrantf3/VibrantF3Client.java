@@ -15,7 +15,7 @@ public class VibrantF3Client implements ClientModInitializer {
     public static final String MOD_ID = "vibrant_f3";
 
     private static KeyMapping debugKeyBinding;
-    private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "key.category"));
+    private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "debug"));
 
     @Override
     public void onInitializeClient() {
