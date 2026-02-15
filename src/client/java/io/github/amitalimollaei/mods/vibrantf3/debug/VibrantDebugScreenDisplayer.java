@@ -1,9 +1,7 @@
 package io.github.amitalimollaei.mods.vibrantf3.debug;
 
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
@@ -11,40 +9,36 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public abstract class VibrantDebugScreenDisplayer implements DebugScreenDisplayer {
-    private Color color;
+    private Color color = null;
     private Identifier debugIdentifier = null;
 
-    private @NotNull String maybeAddDebugPrefix(@NotNull String string) {
-        return (debugIdentifier == null ? "" : "[" + debugIdentifier + "] ") + string;
-    }
-
     public void addPriorityLine(@NonNull String string) {
-        vaddPriorityLine(Component.literal(maybeAddDebugPrefix(string)).withColor(color.getRGB()));
+        vaddPriorityLine(new DebugLine(string, color, debugIdentifier));
     }
 
     public void addLine(@NonNull String string) {
-        vaddLine(Component.literal(maybeAddDebugPrefix(string)).withColor(color.getRGB()));
+        vaddLine(new DebugLine(string, color, debugIdentifier));
     }
 
     public void addToGroup(@NonNull Identifier identifier, Collection<String> collection) {
-        Collection<Component> componentCollection = new ArrayList<>();
+        Collection<DebugLine> componentCollection = new ArrayList<>();
         for (String string: collection) {
-            componentCollection.add(Component.literal(maybeAddDebugPrefix(string)).withColor(color.getRGB()));
+            componentCollection.add(new DebugLine(string, color, debugIdentifier));
         }
         vaddToGroup(identifier, componentCollection);
     }
 
     public void addToGroup(@NonNull Identifier identifier, @NonNull String string) {
-        vaddToGroup(identifier, Component.literal(maybeAddDebugPrefix(string)).withColor(color.getRGB()));
+        vaddToGroup(identifier, new DebugLine(string, color, debugIdentifier));
     }
 
-    public void vaddPriorityLine(Component text) {}
+    public void vaddPriorityLine(DebugLine debugLine) {}
 
-    public void vaddLine(Component text) {}
+    public void vaddLine(DebugLine debugLine) {}
 
-    public void vaddToGroup(Identifier identifier, Collection<Component> collection) {}
+    public void vaddToGroup(Identifier identifier, Collection<DebugLine> collection) {}
 
-    public void vaddToGroup(Identifier identifier, Component text) {}
+    public void vaddToGroup(Identifier identifier, DebugLine debugLine) {}
 
     public void setColor(Color color) {
         this.color = color;

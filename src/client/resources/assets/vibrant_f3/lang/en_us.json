@@ -2,7 +2,7 @@
   "vibrant_f3.gui.color_picker": "Pick Color",
   "vibrant_f3.gui.color_picker.tooltip": "Open Color Picker",
   "key.category.vibrant_f3.debug": "Vibrant F3",
-  "vibrant_f3.key.debug": "Toggle Debug Prefix",
+  "vibrant_f3.key.debug": "Toggle F3 Entry Names",
   "vibrant_f3.midnightconfig.title": "Vibrant F3 Config",
   "vibrant_f3.midnightconfig.debugHudEntryColors": "F3 Menu Entry Colors",
   "vibrant_f3.midnightconfig.debugEnabled": "Show Entry Names In F3 Menu"

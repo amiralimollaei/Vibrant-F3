@@ -1,8 +1,8 @@
 package io.github.amitalimollaei.mods.vibrantf3.mixin;
 
-import com.google.common.base.Strings;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import io.github.amitalimollaei.mods.vibrantf3.debug.DebugLine;
 import io.github.amitalimollaei.mods.vibrantf3.debug.VibrantDebugScreenDisplayer;
 import io.github.amitalimollaei.mods.vibrantf3.storage.Config;
 import net.minecraft.client.gui.Font;
@@ -10,8 +10,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntry;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.NonNull;
 import org.spongepowered.asm.mixin.Final;
@@ -32,13 +30,13 @@ public abstract class MDebugScreenOverlay {
     @Shadow @Final private Font font;
 
     @Unique
-    private List<Component> leftLines;
+    private List<DebugLine> leftLines;
     @Unique
-    private List<Component> rightLines;
+    private List<DebugLine> rightLines;
     @Unique
-    private Map<Identifier, Collection<Component>> groupedLines;
+    private Map<Identifier, Collection<DebugLine>> groupedLines;
     @Unique
-    private List<Component> lines;
+    private List<DebugLine> lines;
     @Unique
     private VibrantDebugScreenDisplayer vibrantDebugScreenDisplayer;
 
@@ -76,7 +74,7 @@ public abstract class MDebugScreenOverlay {
             )
     )
     public void vibrant_f3$skipVanillaRenderLines(DebugScreenOverlay instance, GuiGraphics graphics, List<String> lines, boolean left, Operation<Void> original) {
-        ArrayList<Component> renderingLines = new ArrayList<>();
+        ArrayList<DebugLine> renderingLines = new ArrayList<>();
         if (left) {
             renderingLines.addAll(leftLines);
         } else {
@@ -84,7 +82,7 @@ public abstract class MDebugScreenOverlay {
         }
         // this adds the lines that we didn't account for
         for (String line: lines) {
-            renderingLines.add(Component.literal(line));
+            renderingLines.add(new DebugLine(line));
         }
         vibrant_f3$renderLines(graphics, renderingLines, left);
     }
@@ -102,25 +100,25 @@ public abstract class MDebugScreenOverlay {
         groupedLines = new LinkedHashMap<>();
         lines = new ArrayList<>();
         vibrantDebugScreenDisplayer = new VibrantDebugScreenDisplayer() {
-            public void vaddPriorityLine(Component text) {
+            public void vaddPriorityLine(DebugLine debugLine) {
                 if (leftLines.size() > rightLines.size()) {
-                    rightLines.add(text);
+                    rightLines.add(debugLine);
                 } else {
-                    leftLines.add(text);
+                    leftLines.add(debugLine);
                 }
 
             }
 
-            public void vaddLine(Component text) {
-                lines.add(text);
+            public void vaddLine(DebugLine debugLine) {
+                lines.add(debugLine);
             }
 
-            public void vaddToGroup(Identifier identifier, Collection<Component> collection) {
+            public void vaddToGroup(Identifier identifier, Collection<DebugLine> collection) {
                 groupedLines.computeIfAbsent(identifier, x -> new ArrayList<>()).addAll(collection);
             }
 
-            public void vaddToGroup(Identifier identifier, Component text) {
-                groupedLines.computeIfAbsent(identifier, x -> new ArrayList<>()).add(text);
+            public void vaddToGroup(Identifier identifier, DebugLine debugLine) {
+                groupedLines.computeIfAbsent(identifier, x -> new ArrayList<>()).add(debugLine);
             }
         };
     }
@@ -136,36 +134,36 @@ public abstract class MDebugScreenOverlay {
     )
     private void vibrant_f3$spreadLines(GuiGraphics graphics, CallbackInfo ci) {
         if (!leftLines.isEmpty()) {
-            leftLines.add(Component.literal(""));
+            leftLines.add(new DebugLine(""));
         }
 
         if (!rightLines.isEmpty()) {
-            rightLines.add(Component.literal(""));
+            rightLines.add(new DebugLine(""));
         }
 
         if (!lines.isEmpty()) {
             int i = (lines.size() + 1) / 2;
             leftLines.addAll(lines.subList(0, i));
             rightLines.addAll(lines.subList(i, lines.size()));
-            leftLines.add(Component.literal(""));
+            leftLines.add(new DebugLine(""));
             if (i < lines.size()) {
-                rightLines.add(Component.literal(""));
+                rightLines.add(new DebugLine(""));
             }
         }
 
-        List<Collection<Component>> list4 = new ArrayList<>(groupedLines.values());
+        List<Collection<DebugLine>> list4 = new ArrayList<>(groupedLines.values());
         if (!list4.isEmpty()) {
             int j = (list4.size() + 1) / 2;
 
             for(int k = 0; k < list4.size(); ++k) {
-                Collection<Component> collection2 = list4.get(k);
+                Collection<DebugLine> collection2 = list4.get(k);
                 if (!collection2.isEmpty()) {
                     if (k < j) {
                         leftLines.addAll(collection2);
-                        leftLines.add(Component.literal(""));
+                        leftLines.add(new DebugLine(""));
                     } else {
                         rightLines.addAll(collection2);
-                        rightLines.add(Component.literal(""));
+                        rightLines.add(new DebugLine(""));
                     }
                 }
             }
@@ -173,27 +171,13 @@ public abstract class MDebugScreenOverlay {
     }
 
     @Unique
-    private void vibrant_f3$renderLines(GuiGraphics graphics, @NonNull List<Component> lines, boolean left) {
+    private void vibrant_f3$renderLines(GuiGraphics graphics, @NonNull List<DebugLine> lines, boolean left) {
         Objects.requireNonNull(font);
-        int i = 9;
 
-        for(int j = 0; j < lines.size(); ++j) {
-            Component text = lines.get(j);
-            if (!Strings.isNullOrEmpty(text.getString())) {
-                int k = font.width(text.getString());
-                int l = left ? 2 : graphics.guiWidth() - 2 - k;
-                int m = 2 + i * j;
-                TextColor textColor = text.getStyle().getColor();
-                Color color = new Color(textColor == null ? 0xFFE0E0E0 : textColor.getValue());
-                Color backgroundColor = new Color(
-                        (int) Math.max(color.getRed() * 0.25F, 0),
-                        (int) Math.max(color.getGreen() * 0.25F, 0),
-                        (int) Math.max(color.getBlue() * 0.25F, 0),
-                        0x90
-                );
-                graphics.fill(l - 1, m - 1, l + k + 1, m + i - 1, backgroundColor.getRGB());
-                graphics.drawString(font, text, l, m, 0xFFE0E0E0, false);
-            }
+        for(int lineIdx = 0; lineIdx < lines.size(); ++lineIdx) {
+            DebugLine debugLine = lines.get(lineIdx);
+            int lineY = 2 + DebugLine.LINE_HEIGHT * lineIdx;
+            debugLine.renderLine(graphics, lineY, left);
         }
     }
 }
